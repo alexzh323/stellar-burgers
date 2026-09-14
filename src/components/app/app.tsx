@@ -3,24 +3,48 @@ import '../../index.css';
 import styles from './app.module.css';
 import { useLocation } from 'react-router-dom';
 import { Route, Routes, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from '../../services/store';
+import {
+  getIngredientsThunk,
+  selectIngredientsData,
+  selectIngredientsError,
+  selectIngredientsLoading
+} from '../../services/slices/ingredients';
 
-import { AppHeader, Modal,OrderInfo,IngredientDetails } from '@components';
+import { AppHeader, Modal, OrderInfo, IngredientDetails } from '@components';
 import { Preloader } from '@ui';
-import { Feed, Login,Register,ForgotPassword,ResetPassword,Profile,ProfileOrders,NotFound404 } from '@pages';
-import {ProtectedRoute} from'../protected-route/protected-route'
+import {
+  Feed,
+  Login,
+  Register,
+  ForgotPassword,
+  ResetPassword,
+  Profile,
+  ProfileOrders,
+  NotFound404
+} from '@pages';
+import { ProtectedRoute } from '../protected-route/protected-route';
+import { useEffect } from 'react';
 
 const App = () => {
   /** TODO: взять переменные из стора */
-  const isIngredientsLoading = false;
-  const ingredients = [];
-  const error = null;
-  const location = useLocation()
+  const isIngredientsLoading = useSelector(selectIngredientsLoading);
+  const ingredients = useSelector(selectIngredientsData);
+  const error = useSelector(selectIngredientsError);
+
+  const dispatch = useDispatch()
+  const location = useLocation();
   const backgroundLocation = location.state?.background;
+  
   const navigate = useNavigate();
   
   const handleClose = () => {
     navigate(-1);
-  }
+  };
+
+  useEffect(()=>{
+    dispatch(getIngredientsThunk());
+  }, [])
 
   return (
     <div className={styles.app}>
@@ -31,7 +55,7 @@ const App = () => {
         <div className={`${styles.error} text text_type_main-medium pt-4`}>
           {error}
         </div>
-      ) : 
+        ) : 
       (
         <>
           <Routes location={backgroundLocation || location}>
@@ -72,5 +96,3 @@ const App = () => {
 };
 
 export default App;
-
-
