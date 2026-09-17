@@ -29,6 +29,7 @@ export const ingridientSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase((getIngredientsThunk.pending), (state) => {
       state.isLoading = true;
+      state.error = null;
     });
     builder.addCase((getIngredientsThunk.fulfilled), (state, action) => {
       state.isLoading = false;
