@@ -1,13 +1,16 @@
-import { orderBurgerApi } from '@api'
-import { createAsyncThunk, createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit";
-import { TIngredient, TOrder, TConstructorIngredient } from '../../utils/types'
-import { RootState } from "../store";
+import { orderBurgerApi } from '@api';
+import {
+  createAsyncThunk,
+  createSlice,
+  nanoid,
+  PayloadAction
+} from '@reduxjs/toolkit';
+import { TIngredient, TOrder, TConstructorIngredient } from '../../utils/types';
+import { RootState } from '../store';
 
 export const orderBurgerThunk = createAsyncThunk(
   'burgerConstructor/orderBurger',
-  (data: string[]) => {
-    return orderBurgerApi(data);
-  }
+  (data: string[]) => orderBurgerApi(data)
 );
 
 interface IBurgerConstrucrorSlice {
@@ -22,12 +25,12 @@ const initialState: IBurgerConstrucrorSlice = {
   ingredients: [],
   orderRequest: false,
   orderModalData: null
-}
+};
 
 export const burgerConstructorSlice = createSlice({
   name: 'burgerConstructor',
   initialState,
-  reducers:{
+  reducers: {
     closeOrderModal: (state) => {
       state.orderModalData = null;
     },
@@ -41,51 +44,63 @@ export const burgerConstructorSlice = createSlice({
         state.ingredients.push(action.payload);
       },
       prepare: (ingredient: TIngredient) => ({
-        payload: { 
-          ...ingredient, 
+        payload: {
+          ...ingredient,
           id: nanoid()
         }
       })
     },
 
     removeIngredient: (state, action: PayloadAction<string>) => {
-      state.ingredients = state.ingredients.filter((item) => item.id !== action.payload);
+      state.ingredients = state.ingredients.filter(
+        (item) => item.id !== action.payload
+      );
     },
 
-    reorderIngredients: (state, action: PayloadAction<{from: number; to: number}>) => {
-      const {from, to} = action.payload;
+    reorderIngredients: (
+      state,
+      action: PayloadAction<{ from: number; to: number }>
+    ) => {
+      const { from, to } = action.payload;
       const [movedItem] = state.ingredients.splice(from, 1);
       state.ingredients.splice(to, 0, movedItem);
     }
   },
 
   extraReducers: (builder) => {
-    builder.addCase((orderBurgerThunk.pending), (state) => {
+    builder.addCase(orderBurgerThunk.pending, (state) => {
       state.orderRequest = true;
     });
-    builder.addCase((orderBurgerThunk.fulfilled), (state, action) => {
+    builder.addCase(orderBurgerThunk.fulfilled, (state, action) => {
       state.orderRequest = false;
       state.orderModalData = {
         ...(action.payload as any).order,
-        ingredients: [] 
+        ingredients: []
       };
       state.bun = null;
       state.ingredients = [];
     });
-    builder.addCase((orderBurgerThunk.rejected), (state, action) => {
+    builder.addCase(orderBurgerThunk.rejected, (state, action) => {
       state.orderRequest = false;
-    })
+    });
   }
 });
 
-export const { closeOrderModal, addBun, addIngredient, removeIngredient, reorderIngredients } = burgerConstructorSlice.actions;
+export const {
+  closeOrderModal,
+  addBun,
+  addIngredient,
+  removeIngredient,
+  reorderIngredients
+} = burgerConstructorSlice.actions;
 
 export const selectConstructorItems = (state: RootState) => ({
   bun: state.burgerConstructor.bun,
   ingredients: state.burgerConstructor.ingredients
 });
-export const selectOrderRequest =(state: RootState) => state.burgerConstructor.orderRequest;
-export const selectOrderModalData = (state: RootState) => state.burgerConstructor.orderModalData;
-
+export const selectOrderRequest = (state: RootState) =>
+  state.burgerConstructor.orderRequest;
+export const selectOrderModalData = (state: RootState) =>
+  state.burgerConstructor.orderModalData;
 
 export default burgerConstructorSlice.reducer;

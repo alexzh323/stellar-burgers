@@ -1,23 +1,24 @@
-import { getUserApi, updateUserApi, TRegisterData, getOrdersApi, registerUserApi } from "@api";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { TUser, TOrder } from '../../utils/types'
-import { RootState } from "../store";
+import {
+  getUserApi,
+  updateUserApi,
+  TRegisterData,
+  getOrdersApi,
+  registerUserApi,
+  logoutApi
+} from '@api';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { TUser, TOrder } from '../../utils/types';
+import { RootState } from '../store';
 import { loginUserApi, TLoginData } from '@api';
-import { setCookie } from '../../utils/cookie';
+import { deleteCookie, setCookie } from '../../utils/cookie';
 
-
-export const getUserApiThunk = createAsyncThunk(
-  'user/getUser',
-  () => {
-    return getUserApi();
-  }
+export const getUserApiThunk = createAsyncThunk('user/getUser', () =>
+  getUserApi()
 );
 
 export const updateUserApiThunk = createAsyncThunk(
   'user/updateUser',
-  (data: Partial<TRegisterData>) => {
-    return updateUserApi(data);
-  }
+  (data: Partial<TRegisterData>) => updateUserApi(data)
 );
 
 export const loginUserApiThunk = createAsyncThunk(
@@ -40,11 +41,19 @@ export const registerUserApiThunk = createAsyncThunk(
   }
 );
 
+export const logoutUserApiThunk = createAsyncThunk(
+  'user/logoutUser',
+  async () => {
+    const response = await logoutApi();
+    localStorage.removeItem('refreshToken');
+    deleteCookie('accessToken');
+    return response;
+  }
+);
+
 export const getProfileOrdersThunk = createAsyncThunk(
   'user/getProfileOrders',
-  () => {
-    return getOrdersApi()
-  }
+  () => getOrdersApi()
 );
 
 interface IUserState {
@@ -53,7 +62,7 @@ interface IUserState {
   isLoading: boolean;
   isAuthChecked: boolean;
   error: string | null;
-};
+}
 
 const initialState: IUserState = {
   user: null,
@@ -79,6 +88,7 @@ export const userSlice = createSlice({
     });
     builder.addCase(getUserApiThunk.rejected, (state, action) => {
       state.isLoading = false;
+      state.isAuthChecked = true;
       state.error = action.error.message || 'Ошибка загрузки пользователя';
     });
 
@@ -86,7 +96,7 @@ export const userSlice = createSlice({
       state.isLoading = true;
       state.error = null;
     });
-    builder.addCase(updateUserApiThunk.fulfilled, (state,action) => {
+    builder.addCase(updateUserApiThunk.fulfilled, (state, action) => {
       state.isLoading = false;
       state.user = action.payload.user;
     });
@@ -131,15 +141,31 @@ export const userSlice = createSlice({
       state.isLoading = false;
       state.orders = action.payload;
     });
-    builder.addCase(getProfileOrdersThunk. rejected, (state, action) => {
+    builder.addCase(getProfileOrdersThunk.rejected, (state, action) => {
       state.isLoading = false;
       state.error = action.error.message || 'Ошибка загрузки истории заказов';
-    })
+    });
+
+    builder.addCase(logoutUserApiThunk.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+    builder.addCase(logoutUserApiThunk.fulfilled, (state) => {
+      state.isLoading = false;
+      state.user = null;
+      state.orders = [];
+    });
+    builder.addCase(logoutUserApiThunk.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.error.message || 'Ошибка выхода из системы';
+    });
   }
 });
 
 export const selectUser = (state: RootState) => state.user.user;
 export const selectUserError = (state: RootState) => state.user.error;
 export const selectProfoleOrders = (state: RootState) => state.user.orders;
+export const selectIsAuthChecked = (state: RootState) =>
+  state.user.isAuthChecked;
 
 export default userSlice.reducer;

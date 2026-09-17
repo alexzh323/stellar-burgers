@@ -2,13 +2,15 @@ import { FC, useMemo } from 'react';
 import { TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
 import { useSelector, useDispatch } from '../../services/store';
+import { useNavigate } from 'react-router-dom';
+import { selectUser } from '../../services/slices/user';
 import {
   selectConstructorItems,
   selectOrderModalData,
   selectOrderRequest,
   orderBurgerThunk,
   closeOrderModal as closeOrderModalAction
-}from '../../services/slices/burgerConstructor';
+} from '../../services/slices/burgerConstructor';
 
 export const BurgerConstructor: FC = () => {
   /** TODO: взять переменные constructorItems, orderRequest и orderModalData из стора */
@@ -16,18 +18,26 @@ export const BurgerConstructor: FC = () => {
   const orderRequest = useSelector(selectOrderRequest);
   const orderModalData = useSelector(selectOrderModalData);
 
+  const user = useSelector(selectUser);
+  const navigate = useNavigate();
+
   const dispatch = useDispatch();
 
   const onOrderClick = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
     if (!constructorItems.bun || orderRequest) return;
     const orderData = [
       constructorItems.bun._id,
       ...constructorItems.ingredients.map((item) => item._id),
       constructorItems.bun._id
-    ]
-    dispatch(orderBurgerThunk(orderData))
+    ];
+    dispatch(orderBurgerThunk(orderData));
   };
-  
+
   const closeOrderModal = () => {
     dispatch(closeOrderModalAction());
   };

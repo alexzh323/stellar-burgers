@@ -1,13 +1,10 @@
-import { getFeedsApi} from "@api";
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { TOrder} from '../../utils/types'
-import { RootState } from "../store";
+import { getFeedsApi } from '@api';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { TOrder } from '../../utils/types';
+import { RootState } from '../store';
 
-export const getFeedsApiThunk = createAsyncThunk(
-  'feed/getFeed',
-  () => {
-    return getFeedsApi()
-  }
+export const getFeedsApiThunk = createAsyncThunk('feed/getFeed', () =>
+  getFeedsApi()
 );
 
 interface IFeedsState {
@@ -16,7 +13,7 @@ interface IFeedsState {
   totalToday: number;
   isLoading: boolean;
   error: string | null;
-};
+}
 
 const initialState: IFeedsState = {
   orders: [],
@@ -43,7 +40,7 @@ export const feedSlice = createSlice({
     });
     builder.addCase(getFeedsApiThunk.rejected, (state, action) => {
       state.isLoading = false;
-      state.error = action.error.message || 'Ошибка загрузки заказов'
+      state.error = action.error.message || 'Ошибка загрузки заказов';
     });
   }
 });
