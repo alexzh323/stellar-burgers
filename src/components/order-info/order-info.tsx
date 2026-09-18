@@ -4,7 +4,12 @@ import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
 import { useSelector, useDispatch } from '../../services/store';
-import { selectOrders, getFeedsApiThunk } from '../../services/slices/feed';
+import {
+  selectOrders,
+  getFeedsApiThunk,
+  selectOrderByNumber,
+  getOrderByNumberApiThunk
+} from '../../services/slices/feed';
 import { selectIngredientsData } from '../../services/slices/ingredients';
 import {
   selectProfoleOrders,
@@ -21,21 +26,21 @@ export const OrderInfo: FC = () => {
   const publicOrders = useSelector(selectOrders);
   const profileOrders = useSelector(selectProfoleOrders);
   const orders = isProfileOrder ? profileOrders : publicOrders;
+  const orderByNumber = useSelector(selectOrderByNumber);
 
   useEffect(() => {
-    if (!orders.length) {
-      if (isProfileOrder) {
-        dispatch(getProfileOrdersThunk());
-      } else {
-        dispatch(getFeedsApiThunk());
-      }
+    if (number && !orders.length) {
+      dispatch(getOrderByNumberApiThunk(parseInt(number, 10)));
     }
-  }, [orders, isProfileOrder, dispatch]);
+  }, [number, orders, dispatch]);
 
   const orderData = useMemo(() => {
-    if (!number || !orders.length) return null;
-    return orders.find((item) => item.number === parseInt(number, 10));
-  }, [orders, number]);
+    if (!number) return null;
+    const foundOrder = orders.find(
+      (item) => item.number === parseInt(number, 10)
+    );
+    return foundOrder || orderByNumber;
+  }, [orders, number, orderByNumber]);
 
   const ingredients: TIngredient[] = useSelector(selectIngredientsData);
 
