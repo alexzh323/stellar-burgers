@@ -34,7 +34,9 @@ test.describe('Интеграционные тесты', () => {
     await bunContainer.click();
 
     const modalHeading = page.locator('h3', {hasText: 'Детали ингредиента'});
-    await expect(modalHeading).toBeVisible()
+    const modalIngredientName = page.locator('#modals h3', {hasText: 'Краторная булка N-200i'});
+    await expect(modalHeading).toBeVisible();
+    await expect(modalIngredientName).toBeVisible();
 
     const closeButton = page.locator('#modals button');
     await closeButton.click();
@@ -48,33 +50,15 @@ test.describe('Интеграционные тесты', () => {
 
   test('3. Проверка оформления заказа', async({page, context}) => {
 
-    await page.route('**/auth/user', async(route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ success: true, user: {
-          email: 'fakeName@gmail.com',
-          name: 'fakeName'
-        }})
-      });
+    await page.routeFromHAR('tests/mocks/user.har', {
+      url: '**/api/auth/user',
+      update: false
     });
 
-    await page.route('**/orders', async(route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ success: true, name: 'fakeName', order:{
-          _id: '44',
-          status: 'done',
-          name: 'fakeName',
-          owner: {},
-          createdAt: 'string',
-          updatedAt: 'string',
-          number: 4523,
-          price: 10
-        }})
-      });
-    });
+    await page.routeFromHAR('tests/mocks/order.har', {
+      url: '**/api/orders',
+      update: false
+    })
 
     await context.addCookies([
       {
@@ -100,7 +84,7 @@ test.describe('Интеграционные тесты', () => {
     const orderButton = page.locator('button', {hasText: 'Оформить заказ'});
     await orderButton.click();
 
-    const orderNumber = page.getByText('4523')
+    const orderNumber = page.getByText('110886')
     await expect(orderNumber).toBeVisible();
 
     const closeButton = page.locator('#modals button');
